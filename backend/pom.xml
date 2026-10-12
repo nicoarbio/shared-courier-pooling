@@ -39,7 +39,7 @@
 	</scm>
 	<properties>
 		<java.version>25</java.version>
-		<kotlin.version>2.3.21</kotlin.version>
+		<kotlin.version>2.4.21</kotlin.version>
 		<surefire.excludedGroups>scenario</surefire.excludedGroups>
 		<surefire.groups/>
 	</properties>
@@ -125,7 +125,6 @@
 				<configuration>
 					<args>
 						<arg>-Xjsr305=strict</arg>
-						<arg>-Xannotation-default-target=param-property</arg>
 					</args>
 					<compilerPlugins>
 						<plugin>spring</plugin>
