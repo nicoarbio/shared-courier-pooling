@@ -6,7 +6,7 @@ import java.math.BigDecimal
 import java.math.RoundingMode
 
 /** Cost of a trip: a flat price per kilometer driven. */
-class CostModel(private val pricePerKm: BigDecimal) {
+class CostModel(val pricePerKm: BigDecimal) {
 
 	fun cost(distanceMeters: Double): BigDecimal =
 		pricePerKm.multiply(BigDecimal.valueOf(distanceMeters)).divide(METERS_PER_KM, 2, RoundingMode.HALF_EVEN)
