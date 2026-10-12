@@ -14,10 +14,10 @@ import org.springframework.web.client.RestClient
 /** Wires the engine. Engine classes are plain Kotlin (no Spring) so they can be unit-tested in isolation. */
 @Configuration
 @EnableConfigurationProperties(PoolingProperties::class, OsrmProperties::class)
-open class EngineConfig {
+class EngineConfig {
 
 	@Bean
-	open fun roundPlanner(pooling: PoolingProperties, osrm: OsrmProperties, restClient: RestClient.Builder) = RoundPlanner(
+	fun roundPlanner(pooling: PoolingProperties, osrm: OsrmProperties, restClient: RestClient.Builder) = RoundPlanner(
 		grouper = OrderGrouper(pooling.radiusMeters, pooling.windowTolerance),
 		router = NearestNeighborRouter(),
 		costModel = CostModel(pooling.pricePerKm),
