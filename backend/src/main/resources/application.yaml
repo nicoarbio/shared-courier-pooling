@@ -1,6 +1,19 @@
 spring:
   application:
     name: mercier
+  datasource:
+    url: jdbc:postgresql://localhost:5432/mercier
+    username: mercier
+    password: mercier
+  jpa:
+    open-in-view: false
+    hibernate:
+      # Schema is owned by Flyway (db/migration); Hibernate only checks the entities match it.
+      ddl-auto: validate
+  flyway:
+    # Seed data (db/seed, repeatable migrations) is only loaded by the "local" profile. Tolerate it being
+    # recorded in the database when running without that profile; versioned schema migrations stay strict.
+    ignore-migration-patterns: "repeatable:missing"
 
 mercier:
   pooling:
