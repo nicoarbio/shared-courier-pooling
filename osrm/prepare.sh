@@ -1,13 +1,16 @@
 #!/usr/bin/env bash
-# Prepares OSRM routing data for CABA (Buenos Aires city).
+# Prepares OSRM data for CABA (Buenos Aires city).
 #
 # Steps:
 #   1. Download the Argentina extract from Geofabrik (OpenStreetMap).
 #   2. Clip it to a bounding box enclosing CABA (osmium).
-#   3. Preprocess it with OSRM using the car profile and the MLD algorithm.
+#   3. Preprocess it with OSRM (MLD algorithm) into two datasets:
+#      - routing:   stock car profile; respects one-way streets. Used for routes and costs.
+#      - proximity: car profile with one-way handling disabled. Used to group orders by
+#                   street-network closeness, independent of traffic direction.
 #
 # Everything runs inside Docker containers: nothing to install locally.
-# Output goes to osrm/data/ and is served by the "osrm" docker-compose service.
+# Output goes to osrm/data/ and is served by the docker-compose services.
 set -euo pipefail
 
 cd "$(dirname "$0")"
@@ -41,12 +44,30 @@ docker run --rm -v "$DATA_DIR:/data" "$OSMIUM_IMAGE" sh -c "
   chown $HOST_USER /data/caba.osm.pbf
 "
 
-# 3. OSRM preprocessing (car profile, MLD algorithm)
-echo ">> osrm-extract (car profile)..."
-docker run --rm --user "$HOST_USER" -v "$DATA_DIR:/data" "$OSRM_IMAGE" osrm-extract -p /opt/car.lua /data/caba.osm.pbf
-echo ">> osrm-partition..."
-docker run --rm --user "$HOST_USER" -v "$DATA_DIR:/data" "$OSRM_IMAGE" osrm-partition /data/caba.osrm
-echo ">> osrm-customize..."
-docker run --rm --user "$HOST_USER" -v "$DATA_DIR:/data" "$OSRM_IMAGE" osrm-customize /data/caba.osrm
+# 3. OSRM preprocessing, one dataset per profile.
+# Each dataset dir gets its own copy of the stock profiles (car.lua + lib/), so the
+# proximity profile can be derived from the image's car.lua and stay in sync with it.
+osrm() { docker run --rm --user "$HOST_USER" -v "$DATA_DIR:/data" "$OSRM_IMAGE" "$@"; }
 
-echo ">> Done. Start with: docker compose up -d osrm"
+build() { # $1 = dataset name, $2 = profile file inside the dataset dir
+  local dir="/data/$1"
+  echo ">> [$1] osrm-extract ($2)..."
+  osrm osrm-extract -p "$dir/$2" "$dir/caba.osm.pbf"
+  echo ">> [$1] osrm-partition..."
+  osrm osrm-partition "$dir/caba.osrm"
+  echo ">> [$1] osrm-customize..."
+  osrm osrm-customize "$dir/caba.osrm"
+}
+
+for dataset in routing proximity; do
+  rm -rf "${DATA_DIR:?}/$dataset" && mkdir -p "$DATA_DIR/$dataset"
+  cp "$DATA_DIR/caba.osm.pbf" "$DATA_DIR/$dataset/"
+  osrm sh -c "cp -r /opt/car.lua /opt/lib /data/$dataset/"
+done
+sed -i 's/oneway_handling *= *true/oneway_handling = false/' "$DATA_DIR/proximity/car.lua"
+grep -q 'oneway_handling = false' "$DATA_DIR/proximity/car.lua" || { echo "!! could not disable oneway_handling"; exit 1; }
+
+build routing car.lua
+build proximity car.lua
+
+echo ">> Done. Start with: docker compose up -d osrm osrm-proximity"

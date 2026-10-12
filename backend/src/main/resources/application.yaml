@@ -1,0 +1,13 @@
+spring:
+  application:
+    name: mercier
+
+mercier:
+  pooling:
+    radius-meters: 500
+    window-tolerance: 15m
+    # Calibrated on the case study: $2,500 per dedicated single-order trip / 1.974 km average round trip.
+    price-per-km: 1266
+  osrm:
+    routing-url: http://localhost:5000
+    proximity-url: http://localhost:5001

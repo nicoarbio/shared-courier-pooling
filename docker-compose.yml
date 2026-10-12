@@ -1,12 +1,22 @@
 services:
-  # Routing engine. Requires running osrm/prepare.sh first.
+  # Routing engine (respects one-way streets). Requires running osrm/prepare.sh first.
   osrm:
     image: ghcr.io/project-osrm/osrm-backend:v5.27.1
     command: osrm-routed --algorithm mld /data/caba.osrm
     volumes:
-      - ./osrm/data:/data:ro
+      - ./osrm/data/routing:/data:ro
     ports:
       - "5000:5000"
+    restart: unless-stopped
+
+  # Same street network with one-way handling disabled: used only to group orders by proximity.
+  osrm-proximity:
+    image: ghcr.io/project-osrm/osrm-backend:v5.27.1
+    command: osrm-routed --algorithm mld /data/caba.osrm
+    volumes:
+      - ./osrm/data/proximity:/data:ro
+    ports:
+      - "5001:5000"
     restart: unless-stopped
 
   # Web route viewer on top of the local OSRM (visual checks only; not part of the system).
