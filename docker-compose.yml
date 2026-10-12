@@ -1,0 +1,26 @@
+services:
+  # Routing engine. Requires running osrm/prepare.sh first.
+  osrm:
+    image: ghcr.io/project-osrm/osrm-backend:v5.27.1
+    command: osrm-routed --algorithm mld /data/caba.osrm
+    volumes:
+      - ./osrm/data:/data:ro
+    ports:
+      - "5000:5000"
+    restart: unless-stopped
+
+  # Web route viewer on top of the local OSRM (visual checks only; not part of the system).
+  # Started separately: docker compose --profile tools up -d osrm-frontend  →  http://localhost:9966
+  # The image only publishes the "latest" tag (2019); pinned by digest for reproducibility.
+  osrm-frontend:
+    image: osrm/osrm-frontend@sha256:f8f0fa79aa3b88ca9e3a78553bd06abdf842070911fac7e2a3f4d1e6ca8bf861
+    profiles: ["tools"]
+    environment:
+      OSRM_BACKEND: http://localhost:5000   # queried by the browser, not the container
+      OSRM_CENTER: "-34.6205,-58.4440"      # Yerbal & Félix Lora, Caballito (lat,lon)
+      OSRM_ZOOM: "16"
+      OSRM_LANGUAGE: es
+    ports:
+      - "9966:9966"
+    depends_on:
+      - osrm
