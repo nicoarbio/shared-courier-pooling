@@ -19,6 +19,23 @@ services:
       - "5001:5000"
     restart: unless-stopped
 
+  # Database for the backend (local development credentials).
+  postgres:
+    image: postgres:17
+    environment:
+      POSTGRES_DB: mercier
+      POSTGRES_USER: mercier
+      POSTGRES_PASSWORD: mercier
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U mercier -d mercier"]
+      interval: 5s
+      retries: 10
+    restart: unless-stopped
+
   # Web route viewer on top of the local OSRM (visual checks only; not part of the system).
   # Started separately: docker compose --profile tools up -d osrm-frontend  →  http://localhost:9966
   # The image only publishes the "latest" tag (2019); pinned by digest for reproducibility.
@@ -36,3 +53,6 @@ services:
       - "9966:9966"
     depends_on:
       - osrm
+
+volumes:
+  postgres-data:

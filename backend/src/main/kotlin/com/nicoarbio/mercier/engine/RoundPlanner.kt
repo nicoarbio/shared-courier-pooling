@@ -20,6 +20,10 @@ class RoundPlanner(
 	private val routing: DistanceMatrixProvider,
 ) {
 
+	/** Parameters this planner prices and groups with; stored with each round so it can be explained later. */
+	val pricePerKm get() = costModel.pricePerKm
+	val radiusMeters get() = grouper.radiusMeters
+
 	fun plan(orders: List<Order>): List<Round> {
 		if (orders.isEmpty()) return emptyList()
 		val points = (orders.map { it.merchant.location } + orders.map { it.destination }).distinct()

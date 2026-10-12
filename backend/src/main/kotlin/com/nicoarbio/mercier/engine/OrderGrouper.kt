@@ -16,7 +16,7 @@ import java.time.Duration
  * grouping measures geographic closeness; the actual driving is measured later by the router.
  */
 class OrderGrouper(
-	private val radiusMeters: Double,
+	val radiusMeters: Double,
 	private val windowTolerance: Duration,
 ) {
 

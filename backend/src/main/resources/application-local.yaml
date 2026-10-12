@@ -1,0 +1,4 @@
+# Local development: also loads the case study shops (db/seed).
+spring:
+  flyway:
+    locations: classpath:db/migration,classpath:db/seed

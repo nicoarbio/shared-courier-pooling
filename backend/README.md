@@ -19,11 +19,17 @@ Two OSRM services over the same street network (see [`../osrm`](../osrm)):
 
 Settings live in `src/main/resources/application.yaml` (`mercier.pooling.*`, `mercier.osrm.*`).
 
+## Persistence
+
+PostgreSQL through JPA/Hibernate; the schema is owned by Flyway (`db/migration`), Hibernate only validates it. `PlanningService` re-plans every order that has not left yet each time a new order arrives, in a single transaction.
+
 ## Usage
 
 ```bash
-./mvnw test                  # unit tests (no OSRM needed)
-./mvnw spring-boot:run       # start the service
+./mvnw test                  # unit + persistence tests (needs Docker: PostgreSQL via Testcontainers; no OSRM)
+
+# Run the service (needs: docker compose up -d postgres osrm osrm-proximity)
+./mvnw spring-boot:run -Dspring-boot.run.profiles=local   # "local" also loads the case study shops
 
 # Case study run against real OSRM (needs: docker compose up -d osrm osrm-proximity)
 ./mvnw test -Pscenario       # report → target/scenario-report.md
