@@ -22,3 +22,12 @@
 # virtual machine crash logs, see http://www.java.com/en/download/help/error_hotspot.xml
 hs_err_pid*
 replay_pid*
+
+# Local working documents (not versioned)
+docs/ignore/
+
+# OSRM data (downloaded and preprocessed map; regenerate with osrm/prepare.sh)
+osrm/data/
+
+# IDE (JetBrains)
+.idea/
