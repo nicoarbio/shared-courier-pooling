@@ -36,6 +36,7 @@ class RoundPlannerTest {
 		allocator = CostAllocator(),
 		proximity = proximity,
 		routing = routing,
+		serviceTime = Duration.ofSeconds(60),
 	)
 
 	@Test
@@ -48,5 +49,17 @@ class RoundPlannerTest {
 		assertEquals(450.0, round.distanceMeters)
 		assertEquals(BigDecimal("450.00"), round.cost)
 		assertEquals(BigDecimal("450.00"), round.costByMerchant[shop])
+	}
+
+	@Test
+	fun `schedules each stop with driving time plus service time at previous pickups and deliveries`() {
+		val round = planner.plan(listOf(order("o1", shop, a), order("o2", shop, b))).single()
+
+		// Durations are distance / 10 (Fixtures.matrix); service time is 60 s.
+		// pickup shop (0) -> deliver b: 60 + 20 = 80 -> deliver a: 80 + 60 + 15 = 155 -> return: 155 + 60 + 10 = 225
+		assertEquals(listOf(0.0, 80.0, 155.0, 225.0), round.stops.map { it.arrivalOffsetSeconds })
+		assertEquals(listOf(0.0, 200.0, 150.0, 100.0), round.stops.map { it.legDistanceMeters })
+		assertEquals(45.0, round.drivingSeconds)
+		assertEquals(225.0, round.totalSeconds)
 	}
 }

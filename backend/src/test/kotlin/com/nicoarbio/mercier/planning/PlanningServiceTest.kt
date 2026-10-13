@@ -58,6 +58,7 @@ class PlanningServiceTest @Autowired constructor(
 			return RoundPlanner(
 				OrderGrouper(500.0, Duration.ofMinutes(15)), NearestNeighborRouter(),
 				CostModel(BigDecimal(1000)), CostAllocator(), proximity = grid, routing = grid,
+				serviceTime = Duration.ofMinutes(2),
 			)
 		}
 	}

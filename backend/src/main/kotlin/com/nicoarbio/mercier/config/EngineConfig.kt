@@ -24,5 +24,6 @@ class EngineConfig {
 		allocator = CostAllocator(),
 		proximity = OsrmDistanceMatrixProvider(restClient.clone().baseUrl(osrm.proximityUrl).build()),
 		routing = OsrmDistanceMatrixProvider(restClient.clone().baseUrl(osrm.routingUrl).build()),
+		serviceTime = pooling.stopServiceTime,
 	)
 }

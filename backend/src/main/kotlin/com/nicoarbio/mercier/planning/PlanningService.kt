@@ -10,18 +10,20 @@ import com.nicoarbio.mercier.persistence.OrderRepository
 import com.nicoarbio.mercier.persistence.OrderStatus
 import com.nicoarbio.mercier.persistence.RoundEntity
 import com.nicoarbio.mercier.persistence.RoundRepository
+import com.nicoarbio.mercier.persistence.RoundStatus
 import com.nicoarbio.mercier.persistence.RoundStopEmbeddable
 import com.nicoarbio.mercier.persistence.toDomain
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
 import java.time.Clock
 import java.time.Instant
+import java.time.LocalDateTime
 import java.util.UUID
 
 /**
  * Keeps the planned rounds in sync with the orders that have not left yet.
  *
- * Every new order triggers a full re-plan of all PENDING and PLANNED orders: their current rounds are
+ * Every new order triggers a full re-plan of all PENDING and PLANNED orders (DISPATCHED ones already left): their current rounds are
  * discarded and the engine groups and routes them again. Whether a new order fits an existing round
  * is decided there, by the engine's grouping rules. Runs in a single transaction, so readers never
  * see a half-replaced plan.
@@ -67,8 +69,11 @@ class PlanningService(
 
 		val byDomainId = open.associateBy { it.id.toString() }
 		val plannedAt = Instant.now(clock)
+		val now = LocalDateTime.now(clock)
 		return planner.plan(open.map { it.toDomain() }).map { round ->
-			val entity = rounds.save(round.toEntity(plannedAt))
+			// Estimated departure: the earliest delivery window of the round, or now if it already started.
+			val departure = maxOf(round.orders.minOf { it.window.start }, now)
+			val entity = rounds.save(round.toEntity(plannedAt, departure))
 			round.orders.forEach { order ->
 				byDomainId.getValue(order.id).apply {
 					this.round = entity
@@ -79,14 +84,31 @@ class PlanningService(
 		}
 	}
 
-	private fun Round.toEntity(plannedAt: Instant) = RoundEntity(
+	/**
+	 * The courier leaves with the round: it becomes DISPATCHED with its orders, is no longer re-planned,
+	 * and its departure becomes the actual one, so every estimated arrival shifts accordingly.
+	 */
+	@Transactional
+	fun dispatch(roundId: UUID): RoundEntity {
+		val round = rounds.findById(roundId).orElseThrow { NoSuchElementException("Round $roundId not found") }
+		check(round.status == RoundStatus.PLANNED) { "Round $roundId is already ${round.status}" }
+		round.status = RoundStatus.DISPATCHED
+		round.departureAt = LocalDateTime.now(clock)
+		orders.findAllByRound(round).forEach { it.status = OrderStatus.DISPATCHED }
+		return round
+	}
+
+	private fun Round.toEntity(plannedAt: Instant, departure: LocalDateTime) = RoundEntity(
 		id = UUID.randomUUID(),
 		plannedAt = plannedAt,
 		distanceMeters = distanceMeters,
-		durationSeconds = durationSeconds,
+		drivingSeconds = drivingSeconds,
 		cost = cost,
 		pricePerKm = planner.pricePerKm,
 		radiusMeters = planner.radiusMeters,
+		serviceTimeSeconds = planner.serviceTime.toSeconds().toDouble(),
+		status = RoundStatus.PLANNED,
+		departureAt = departure,
 		stops = stops.mapTo(mutableListOf()) { stop ->
 			RoundStopEmbeddable(
 				kind = stop.kind,
@@ -94,6 +116,9 @@ class PlanningService(
 				orderId = stop.order?.let { UUID.fromString(it.id) },
 				lon = stop.location.lon,
 				lat = stop.location.lat,
+				legDistanceMeters = stop.legDistanceMeters,
+				legDurationSeconds = stop.legDurationSeconds,
+				arrivalOffsetSeconds = stop.arrivalOffsetSeconds,
 			)
 		},
 		shares = costByMerchant.entries.associateTo(mutableMapOf()) { (merchant, amount) -> UUID.fromString(merchant.id) to amount },

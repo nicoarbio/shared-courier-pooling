@@ -12,6 +12,8 @@ data class PoolingProperties(
 	val windowTolerance: Duration,
 	/** Price paid to the courier per kilometer driven. */
 	val pricePerKm: BigDecimal,
+	/** Time spent at each pickup and delivery; used for estimated arrival times. */
+	val stopServiceTime: Duration,
 )
 
 @ConfigurationProperties("mercier.osrm")
