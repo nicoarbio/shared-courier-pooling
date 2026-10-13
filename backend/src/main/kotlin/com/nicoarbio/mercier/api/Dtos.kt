@@ -91,3 +91,12 @@ data class StopResponse(
 )
 
 data class ShareResponse(val merchantId: UUID, val merchantName: String, val amount: BigDecimal)
+
+/** An address match for the merchant to confirm on a map before submitting the order. */
+data class GeocodeCandidateResponse(
+	val label: String,
+	val street: String?,
+	val houseNumber: String?,
+	val neighbourhood: String?,
+	val location: Coordinates,
+)

@@ -28,6 +28,11 @@ mercier:
     # Calibrated on the case study: $2,500 per dedicated single-order trip / 1.974 km average round trip.
     price-per-km: 1266
     stop-service-time: 2m
+  geocoding:
+    nominatim-url: http://localhost:8088
+    # Delivery-area search box around the merchant (well beyond the 500 m pooling radius).
+    search-radius-meters: 2000
+    max-results: 5
   osrm:
     routing-url: http://localhost:5000
     proximity-url: http://localhost:5001

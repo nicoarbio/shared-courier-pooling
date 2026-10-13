@@ -1,6 +1,9 @@
 package com.nicoarbio.mercier.api
 
 import com.nicoarbio.mercier.TestcontainersConfiguration
+import com.nicoarbio.mercier.domain.GeoPoint
+import com.nicoarbio.mercier.geocoding.GeocodeCandidate
+import com.nicoarbio.mercier.geocoding.Geocoder
 import com.nicoarbio.mercier.engine.CostAllocator
 import com.nicoarbio.mercier.engine.CostModel
 import com.nicoarbio.mercier.engine.NearestNeighborRouter
@@ -10,6 +13,7 @@ import com.nicoarbio.mercier.persistence.MerchantEntity
 import com.nicoarbio.mercier.persistence.MerchantRepository
 import com.nicoarbio.mercier.routing.DistanceMatrix
 import com.nicoarbio.mercier.routing.DistanceMatrixProvider
+import org.hamcrest.Matchers.closeTo
 import org.hamcrest.Matchers.contains
 import org.hamcrest.Matchers.containsString
 import org.hamcrest.Matchers.startsWith
@@ -61,6 +65,13 @@ class ApiTest @Autowired constructor(
 			LocalDateTime.of(2026, 10, 13, 18, 0).atZone(ZoneId.of("America/Argentina/Buenos_Aires")).toInstant(),
 			ZoneId.of("America/Argentina/Buenos_Aires"),
 		)
+
+		/** Returns one candidate at the center of the requested area, so tests can check where the search was bounded. */
+		@Bean
+		@Primary
+		fun fakeGeocoder() = Geocoder { query, area, _ ->
+			listOf(GeocodeCandidate("$query, Caballito", "Yerbal", "1550", "Caballito", GeoPoint((area.minLon + area.maxLon) / 2, (area.minLat + area.maxLat) / 2)))
+		}
 
 		@Bean
 		@Primary
@@ -170,6 +181,19 @@ class ApiTest @Autowired constructor(
 		mvc.post("/api/orders") { contentType = MediaType.APPLICATION_JSON; content = orderJson(UUID.randomUUID(), 0.0, 0.003) }
 			.andExpect { status { isNotFound() }; jsonPath("$.detail") { value(containsString("Merchant")) } }
 		mvc.get("/api/rounds/${UUID.randomUUID()}").andExpect { status { isNotFound() } }
+	}
+
+	@Test
+	fun `addresses are searched around the merchant and returned as candidates`() {
+		mvc.get("/api/geocode?q=Yerbal 1550&merchantId=$kiosk").andExpect {
+			status { isOk() }
+			jsonPath("$[0].label") { value("Yerbal 1550, Caballito") }
+			jsonPath("$[0].houseNumber") { value("1550") }
+			jsonPath("$[0].location.lon") { value(closeTo(0.0001, 1e-9)) } // the fake answers at the area center: the kiosk
+			jsonPath("$[0].location.lat") { value(closeTo(0.0, 1e-9)) }
+		}
+		mvc.get("/api/geocode?q=Ye&merchantId=$kiosk").andExpect { status { isBadRequest() } }
+		mvc.get("/api/geocode?q=Yerbal 1550&merchantId=${UUID.randomUUID()}").andExpect { status { isNotFound() } }
 	}
 
 	@Test
