@@ -3,6 +3,7 @@ package com.nicoarbio.mercier.api
 import com.nicoarbio.mercier.domain.GeoPoint
 import com.nicoarbio.mercier.domain.TimeWindow
 import com.nicoarbio.mercier.geocoding.GeocodingService
+import com.nicoarbio.mercier.observability.RequestContext
 import com.nicoarbio.mercier.persistence.RoundStatus
 import com.nicoarbio.mercier.planning.PlanningService
 import io.swagger.v3.oas.annotations.Operation
@@ -32,7 +33,10 @@ class MerchantController(private val views: Views) {
 
 	@GetMapping("/{id}/orders")
 	@Operation(summary = "A merchant's orders with their round, the merchant's share and the estimated delivery time")
-	fun orders(@PathVariable id: UUID) = views.ordersOf(id)
+	fun orders(@PathVariable id: UUID): List<OrderResponse> {
+		RequestContext.merchant(id)
+		return views.ordersOf(id)
+	}
 }
 
 @RestController
@@ -43,6 +47,7 @@ class OrderController(private val planning: PlanningService, private val views: 
 	@PostMapping
 	@Operation(summary = "Submit an order; every order that has not left yet is re-planned")
 	fun create(@Valid @RequestBody request: CreateOrderRequest): ResponseEntity<OrderResponse> {
+		RequestContext.merchant(request.merchantId!!)
 		val order = planning.submitOrder(
 			merchantId = request.merchantId!!,
 			destination = GeoPoint(request.destination!!.lon!!, request.destination.lat!!),
@@ -66,6 +71,7 @@ class GeocodingController(private val geocoding: GeocodingService) {
 	@GetMapping
 	@Operation(summary = "Search an address within the merchant's delivery area (candidates to confirm on a map)")
 	fun search(@RequestParam q: String, @RequestParam merchantId: UUID): List<GeocodeCandidateResponse> {
+		RequestContext.merchant(merchantId)
 		if (q.trim().length < MIN_QUERY_LENGTH) {
 			throw ResponseStatusException(HttpStatus.BAD_REQUEST, "Query must have at least $MIN_QUERY_LENGTH characters")
 		}

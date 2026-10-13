@@ -3,6 +3,7 @@ package com.nicoarbio.mercier.geocoding
 import com.nicoarbio.mercier.config.GeocodingProperties
 import com.nicoarbio.mercier.domain.GeoPoint
 import com.nicoarbio.mercier.persistence.MerchantRepository
+import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
 import java.util.UUID
@@ -25,6 +26,10 @@ class GeocodingService(
 	fun search(query: String, merchantId: UUID): List<GeocodeCandidate> {
 		val merchant = merchants.findById(merchantId).orElseThrow { NoSuchElementException("Merchant $merchantId not found") }
 		val area = SearchArea.around(GeoPoint(merchant.lon, merchant.lat), properties.searchRadiusMeters)
-		return geocoder.search(query.trim(), area, properties.maxResults)
+		val candidates = geocoder.search(query.trim(), area, properties.maxResults)
+		log.info("Address search returned {} candidates ({} with house number)", candidates.size, candidates.count { it.houseNumber != null })
+		return candidates
 	}
 }
+
+private val log = LoggerFactory.getLogger(GeocodingService::class.java)

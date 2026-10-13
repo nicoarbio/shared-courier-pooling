@@ -28,8 +28,8 @@ import kotlin.test.assertEquals
 @Tag("scenario")
 class CaseStudyScenarioTest {
 
-	private val routing = osrm(System.getenv("OSRM_ROUTING_URL") ?: "http://localhost:5000")
-	private val proximity = osrm(System.getenv("OSRM_PROXIMITY_URL") ?: "http://localhost:5001")
+	private val routing = osrm("routing", System.getenv("OSRM_ROUTING_URL") ?: "http://localhost:5000")
+	private val proximity = osrm("proximity", System.getenv("OSRM_PROXIMITY_URL") ?: "http://localhost:5001")
 
 	@Test
 	fun `case study report`() {
@@ -120,5 +120,5 @@ class CaseStudyScenarioTest {
 		return 2 * r * Math.asin(Math.sqrt(h))
 	}
 
-	private fun osrm(url: String) = OsrmDistanceMatrixProvider(RestClient.builder().baseUrl(url).build())
+	private fun osrm(name: String, url: String) = OsrmDistanceMatrixProvider(name, RestClient.builder().baseUrl(url).build())
 }

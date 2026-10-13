@@ -197,6 +197,17 @@ class ApiTest @Autowired constructor(
 	}
 
 	@Test
+	fun `every response carries a request id, and framework errors stay 4xx`() {
+		mvc.get("/api/merchants").andExpect { header { exists("X-Request-Id") } }
+		mvc.get("/api/merchants") { header("X-Request-Id", "abc-123") }.andExpect { header { string("X-Request-Id", "abc-123") } }
+
+		// Spring MVC errors must not fall into the catch-all 500 handler.
+		mvc.post("/api/orders") { contentType = MediaType.APPLICATION_JSON; content = "{not json" }.andExpect { status { isBadRequest() } }
+		mvc.get("/api/geocode?q=Yerbal 1550").andExpect { status { isBadRequest() } } // missing merchantId
+		mvc.get("/api/rounds/not-a-uuid").andExpect { status { isBadRequest() } }
+	}
+
+	@Test
 	fun `OpenAPI description is published`() {
 		mvc.get("/v3/api-docs").andExpect {
 			status { isOk() }
