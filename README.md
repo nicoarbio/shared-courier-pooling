@@ -31,7 +31,7 @@ flowchart LR
 | [`backend/`](backend) | **Mercier**: REST API, optimization engine, persistence | [README](backend/README.md) |
 | [`osrm/`](osrm) | Self-hosted OSRM over an OpenStreetMap extract of Buenos Aires (two profiles) | [README](osrm/README.md) |
 | [`nominatim/`](nominatim) | Self-hosted geocoder over the same extract | [README](nominatim/README.md) |
-| `frontend/` | Mobile-first web app for shops and couriers | TODO |
+| [`frontend/`](frontend) | Mobile-first web app for shops and couriers | [README](frontend/README.md) |
 
 ## Tech stack
 
@@ -42,11 +42,11 @@ flowchart LR
 - **Map data**: [OpenStreetMap](https://www.openstreetmap.org/) via [Geofabrik](https://download.geofabrik.de/).
 - **Tests**: JUnit 5, MockMvc, Testcontainers.
 - **Infra**: Docker Compose.
-- **Frontend**: Angular — TODO.
+- **Frontend**: Angular 22, Angular Material, Leaflet (OpenStreetMap tiles), Vitest.
 
 ## Getting started
 
-Requirements: Docker (with Compose) and JDK 25.
+Requirements: Docker (with Compose), JDK 25 and Node.js 24.
 
 ```bash
 # 1. Map data: download the Argentina extract, clip it to Buenos Aires, preprocess both OSRM profiles (~400 MB download)
@@ -60,14 +60,21 @@ cd backend
 ./mvnw spring-boot:run -Dspring-boot.run.profiles=local
 ```
 
-Then open the API docs at http://localhost:8080/swagger-ui.html.
+```bash
+# 4. Frontend (in another terminal)
+cd frontend
+npm install
+npm start
+```
+
+Open the app at http://localhost:4200 (API docs: http://localhost:8080/swagger-ui.html).
 
 Tests:
 
 ```bash
-cd backend
-./mvnw test                 # unit + API + persistence tests (needs Docker; no OSRM)
-./mvnw test -Pscenario      # case study against the real OSRM services → target/scenario-report.md
+(cd frontend && npm test)                # frontend unit tests
+(cd backend && ./mvnw test)              # backend unit + API + persistence tests (needs Docker; no OSRM)
+(cd backend && ./mvnw test -Pscenario)   # case study against the real OSRM services → backend/target/scenario-report.md
 ```
 
 Optional route viewer for visual checks: `docker compose --profile tools up -d osrm-frontend` → http://localhost:9966
