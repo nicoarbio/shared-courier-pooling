@@ -19,6 +19,12 @@ spring:
     # recorded in the database when running without that profile; versioned schema migrations stay strict.
     ignore-migration-patterns: "repeatable:missing"
 
+logging:
+  # Correlation ids (see CorrelationFilter) on every line: [requestId sessionId merchantId].
+  pattern:
+    correlation: "[%X{requestId:-} %X{sessionId:-} %X{merchantId:-}] "
+  include-application-name: false
+
 mercier:
   # Delivery windows and estimated times are wall-clock times in this zone.
   time-zone: America/Argentina/Buenos_Aires

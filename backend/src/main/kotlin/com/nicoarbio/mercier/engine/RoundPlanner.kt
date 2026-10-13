@@ -7,6 +7,7 @@ import com.nicoarbio.mercier.domain.Stop
 import com.nicoarbio.mercier.domain.StopKind
 import com.nicoarbio.mercier.routing.DistanceMatrix
 import com.nicoarbio.mercier.routing.DistanceMatrixProvider
+import org.slf4j.LoggerFactory
 import java.time.Duration
 
 /**
@@ -43,6 +44,10 @@ class RoundPlanner(
 			val stops = schedule(router.route(group, routingMatrix), routingMatrix)
 			val distance = stops.sumOf { it.legDistanceMeters }
 			val cost = costModel.cost(distance)
+			log.debug(
+				"Round of {} orders: {} ({} m, {} s total, \${})",
+				group.size, stops.joinToString(" -> ") { "${it.kind}:${it.merchant.id}" }, distance.toLong(), stops.last().arrivalOffsetSeconds.toLong(), cost,
+			)
 			Round(group, stops, distance, stops.sumOf { it.legDurationSeconds }, cost, allocator.allocate(cost, group))
 		}
 	}
@@ -61,3 +66,5 @@ class RoundPlanner(
 		}
 	}
 }
+
+private val log = LoggerFactory.getLogger(RoundPlanner::class.java)

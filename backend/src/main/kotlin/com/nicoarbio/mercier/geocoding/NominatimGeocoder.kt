@@ -3,7 +3,9 @@ package com.nicoarbio.mercier.geocoding
 import com.fasterxml.jackson.annotation.JsonProperty
 import com.nicoarbio.mercier.domain.GeoPoint
 import org.springframework.http.HttpHeaders
+import org.slf4j.LoggerFactory
 import org.springframework.web.client.RestClient
+import org.springframework.web.client.RestClientException
 import org.springframework.web.client.body
 
 /**
@@ -12,7 +14,20 @@ import org.springframework.web.client.body
  */
 class NominatimGeocoder(private val restClient: RestClient) : Geocoder {
 
-	override fun search(query: String, area: SearchArea, limit: Int): List<GeocodeCandidate> =
+	override fun search(query: String, area: SearchArea, limit: Int): List<GeocodeCandidate> {
+		val start = System.nanoTime()
+		val candidates = try {
+			fetch(query, area, limit)
+		} catch (e: RestClientException) {
+			log.warn("Nominatim search failed after {} ms: {}", (System.nanoTime() - start) / 1_000_000, e.message)
+			throw e
+		}
+		// The query is a customer address (personal data): only at DEBUG.
+		log.debug("Nominatim search '{}' returned {} candidates in {} ms", query, candidates.size, (System.nanoTime() - start) / 1_000_000)
+		return candidates
+	}
+
+	private fun fetch(query: String, area: SearchArea, limit: Int): List<GeocodeCandidate> =
 		restClient.get()
 			.uri { uri ->
 				uri.path("/search")
@@ -48,3 +63,5 @@ class NominatimGeocoder(private val restClient: RestClient) : Geocoder {
 		val address: Map<String, String> = emptyMap(),
 	)
 }
+
+private val log = LoggerFactory.getLogger(NominatimGeocoder::class.java)

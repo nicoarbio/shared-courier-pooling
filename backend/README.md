@@ -39,6 +39,15 @@ Swagger UI at `/swagger-ui.html` (OpenAPI at `/v3/api-docs`). Errors are RFC 945
 
 Estimated times: departure (earliest delivery window, or now) + driving per OSRM + `stop-service-time` at each pickup and delivery.
 
+## Logging
+
+SLF4J/Logback. Every line carries correlation ids `[requestId sessionId merchantId]`:
+- `requestId`: from the `X-Request-Id` header or generated; returned in the response (show it to users when something fails).
+- `sessionId`: from the `X-Session-Id` header the UI sends (one per browser tab), to follow a merchant's flow.
+- `merchantId`: set by the endpoints that act on behalf of a merchant.
+
+INFO logs business events (order submitted, re-plan summary, dispatch, address search counts) and one line per request; DEBUG adds engine detail and OSRM/Nominatim timings (e.g. `logging.level.com.nicoarbio.mercier=DEBUG`). Customer addresses are personal data and only appear at DEBUG. The `cloud` profile switches to JSON logs (ECS), with the ids as fields.
+
 ## Usage
 
 ```bash

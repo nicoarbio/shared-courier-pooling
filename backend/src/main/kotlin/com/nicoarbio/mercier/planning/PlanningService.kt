@@ -13,9 +13,11 @@ import com.nicoarbio.mercier.persistence.RoundRepository
 import com.nicoarbio.mercier.persistence.RoundStatus
 import com.nicoarbio.mercier.persistence.RoundStopEmbeddable
 import com.nicoarbio.mercier.persistence.toDomain
+import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
 import java.time.Clock
+import java.math.BigDecimal
 import java.time.Instant
 import java.time.LocalDateTime
 import java.util.UUID
@@ -54,6 +56,7 @@ class PlanningService(
 				createdAt = Instant.now(clock),
 			),
 		)
+		log.info("Order {} submitted, window {} - {}", order.id, window.start, window.end)
 		replan()
 		return order
 	}
@@ -70,7 +73,14 @@ class PlanningService(
 		val byDomainId = open.associateBy { it.id.toString() }
 		val plannedAt = Instant.now(clock)
 		val now = LocalDateTime.now(clock)
-		return planner.plan(open.map { it.toDomain() }).map { round ->
+		val start = System.nanoTime()
+		val planned = planner.plan(open.map { it.toDomain() })
+		log.info(
+			"Re-planned {} open orders into {} rounds ({} m, \${}) in {} ms",
+			open.size, planned.size, planned.sumOf { it.distanceMeters }.toLong(),
+			planned.fold(BigDecimal.ZERO) { acc, r -> acc + r.cost }, (System.nanoTime() - start) / 1_000_000,
+		)
+		return planned.map { round ->
 			// Estimated departure: the earliest delivery window of the round, or now if it already started.
 			val departure = maxOf(round.orders.minOf { it.window.start }, now)
 			val entity = rounds.save(round.toEntity(plannedAt, departure))
@@ -95,6 +105,7 @@ class PlanningService(
 		round.status = RoundStatus.DISPATCHED
 		round.departureAt = LocalDateTime.now(clock)
 		orders.findAllByRound(round).forEach { it.status = OrderStatus.DISPATCHED }
+		log.info("Round {} dispatched at {}", round.id, round.departureAt)
 		return round
 	}
 
@@ -124,3 +135,5 @@ class PlanningService(
 		shares = costByMerchant.entries.associateTo(mutableMapOf()) { (merchant, amount) -> UUID.fromString(merchant.id) to amount },
 	)
 }
+
+private val log = LoggerFactory.getLogger(PlanningService::class.java)

@@ -22,8 +22,8 @@ class EngineConfig {
 		router = NearestNeighborRouter(),
 		costModel = CostModel(pooling.pricePerKm),
 		allocator = CostAllocator(),
-		proximity = OsrmDistanceMatrixProvider(restClient.clone().baseUrl(osrm.proximityUrl).build()),
-		routing = OsrmDistanceMatrixProvider(restClient.clone().baseUrl(osrm.routingUrl).build()),
+		proximity = OsrmDistanceMatrixProvider("proximity", restClient.clone().baseUrl(osrm.proximityUrl).build()),
+		routing = OsrmDistanceMatrixProvider("routing", restClient.clone().baseUrl(osrm.routingUrl).build()),
 		serviceTime = pooling.stopServiceTime,
 	)
 }

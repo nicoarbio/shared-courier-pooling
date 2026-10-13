@@ -1,0 +1,6 @@
+# Cloud deployment: JSON logs (Elastic Common Schema), so the platform can index and filter them.
+# MDC entries (requestId, sessionId, merchantId) are included as fields.
+logging:
+  structured:
+    format:
+      console: ecs
