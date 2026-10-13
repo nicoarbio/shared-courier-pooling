@@ -54,6 +54,39 @@ services:
       retries: 10
     restart: unless-stopped
 
+  # The application itself, under the "app" profile: `docker compose up -d` keeps starting only the
+  # infrastructure (for development); `docker compose --profile app up -d --build` runs the whole system.
+  backend:
+    build: ./backend
+    profiles: ["app"]
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/mercier
+      MERCIER_OSRM_ROUTING_URL: http://osrm-routing:5000
+      MERCIER_OSRM_PROXIMITY_URL: http://osrm-proximity:5000
+      MERCIER_GEOCODING_NOMINATIM_URL: http://nominatim:8080
+      # Also load the case study shops (db/seed).
+      SPRING_FLYWAY_LOCATIONS: classpath:db/migration,classpath:db/seed
+    depends_on:
+      postgres:
+        condition: service_healthy
+      osrm-routing:
+        condition: service_started
+      osrm-proximity:
+        condition: service_started
+      nominatim:
+        condition: service_started
+    restart: unless-stopped
+    # No published port: reached through the frontend's nginx (same origin).
+
+  frontend:
+    build: ./frontend
+    profiles: ["app"]
+    depends_on:
+      - backend
+    ports:
+      - "8081:80"
+    restart: unless-stopped
+
   # Web route viewer on top of the local OSRM (visual checks only; not part of the system).
   # Started separately: docker compose --profile tools up -d osrm-frontend  →  http://localhost:9966
   # The image only publishes the "latest" tag (2019); pinned by digest for reproducibility.

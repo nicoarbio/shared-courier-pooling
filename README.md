@@ -46,7 +46,20 @@ flowchart LR
 
 ## Getting started
 
-Requirements: Docker (with Compose), JDK 25 and Node.js 24.
+### Whole system in Docker
+
+Requirements: Docker (with Compose).
+
+```bash
+./osrm/prepare.sh                                # map data (~400 MB download, once)
+docker compose --profile app up -d --build       # everything; Nominatim imports the map on its first start (~7 min)
+```
+
+Open http://localhost:8081 (API docs: http://localhost:8081/swagger-ui.html). nginx serves the app and proxies the API, so the browser sees a single origin.
+
+### Development
+
+Requirements: Docker (with Compose), JDK 25 and Node.js 24. `docker compose up -d` (without the `app` profile) starts only the infrastructure.
 
 ```bash
 # 1. Map data: download the Argentina extract, clip it to Buenos Aires, preprocess both OSRM profiles (~400 MB download)
