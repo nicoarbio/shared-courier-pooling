@@ -19,6 +19,24 @@ services:
       - "5001:5000"
     restart: unless-stopped
 
+  # Geocoder (address -> coordinates) over the same CABA extract as OSRM (osrm/prepare.sh).
+  # The first start imports the extract into its own database (~7 min); later starts reuse the volume.
+  nominatim:
+    image: mediagis/nominatim:4.5
+    environment:
+      PBF_PATH: /osm/caba.osm.pbf
+      IMPORT_STYLE: full
+      THREADS: 4
+      NOMINATIM_PASSWORD: nominatim
+    volumes:
+      # Mounted outside /nominatim: the image takes ownership of everything under that path.
+      - ./osrm/data/caba.osm.pbf:/osm/caba.osm.pbf:ro
+      - nominatim-data:/var/lib/postgresql/16/main
+    shm_size: 1g
+    ports:
+      - "8088:8080"
+    restart: unless-stopped
+
   # Database for the backend (local development credentials).
   postgres:
     image: postgres:17
@@ -56,3 +74,4 @@ services:
 
 volumes:
   postgres-data:
+  nominatim-data:
