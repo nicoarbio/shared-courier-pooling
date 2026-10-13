@@ -1,59 +1,30 @@
-# Frontend
+# frontend
 
-This project was generated using [Angular CLI](https://github.com/angular/angular-cli) version 22.2.2.
+Mobile-first web app (Angular 22 + Angular Material) for the two roles of the system. Spanish UI; no login: the user says who they are.
 
-## Development server
+| Route | Who | What |
+|---|---|---|
+| `/` | everyone | Choose role |
+| `/comercio` | shop | Pick which shop you are (remembered in the browser) |
+| `/comercio/:id/nuevo` | shop | New order: search the address as you type, confirm/drag the point on the map, delivery window |
+| `/comercio/:id/pedidos` | shop | Your orders: status, round, your share of the cost, estimated delivery (auto-refresh 30 s) |
+| `/repartidor` | courier | Rounds ready to leave (auto-refresh 30 s) |
+| `/repartidor/rondas/:id` | courier | Ordered stops with times, map, "Open in Google Maps", "Leave" (dispatch) |
 
-To start a local development server, run:
+## Structure
 
-```bash
-ng serve
-```
+- `core/`: typed API client (mirrors the backend DTOs), `X-Session-Id` interceptor (one id per tab, for log correlation), error mapping (shows the backend's `X-Request-Id` as an error code), merchant session, polling.
+- `i18n/`: every visible text under a key in `es.ts`, used as `{{ 'key' | t }}`. Keys are type-checked: a missing key does not compile. Another language = another file with the same shape.
+- `shared/`: Leaflet map over OpenStreetMap tiles (HTML markers, optional draggable point), error message.
+- `merchant/`, `courier/`: screens. The new-order behaviour lives in `OrderDraft` (a per-screen service), so the visual layer can change without touching it.
 
-Once the server is running, open your browser and navigate to `http://localhost:4200/`. The application will automatically reload whenever you modify any of the source files.
-
-## Code scaffolding
-
-Angular CLI includes powerful code scaffolding tools. To generate a new component, run:
-
-```bash
-ng generate component component-name
-```
-
-For a complete list of available schematics (such as `components`, `directives`, or `pipes`), run:
+## Usage
 
 ```bash
-ng generate --help
+npm install
+npm start      # http://localhost:4200 — /api is proxied to the backend on :8080 (proxy.conf.json), so no CORS is needed
+npm test       # unit tests (Vitest)
+npm run build  # production build → dist/frontend
 ```
 
-## Building
-
-To build the project run:
-
-```bash
-ng build
-```
-
-This will compile your project and store the build artifacts in the `dist/` directory. By default, the production build optimizes your application for performance and speed.
-
-## Running unit tests
-
-To execute unit tests with the [Vitest](https://vitest.dev/) test runner, use the following command:
-
-```bash
-ng test
-```
-
-## Running end-to-end tests
-
-For end-to-end (e2e) testing, run:
-
-```bash
-ng e2e
-```
-
-Angular CLI does not come with an end-to-end testing framework by default. You can choose one that suits your needs.
-
-## Additional Resources
-
-For more information on using the Angular CLI, including detailed command references, visit the [Angular CLI Overview and Command Reference](https://angular.dev/tools/cli) page.
+The backend and its services must be running (see the [repository README](../README.md)).

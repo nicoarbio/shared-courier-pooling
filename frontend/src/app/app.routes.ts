@@ -11,5 +11,12 @@ export const routes: Routes = [
       { path: ':merchantId/pedidos', loadComponent: () => import('./merchant/my-orders').then((m) => m.MyOrders) },
     ],
   },
+  {
+    path: 'repartidor',
+    children: [
+      { path: '', loadComponent: () => import('./courier/rounds').then((m) => m.Rounds) },
+      { path: 'rondas/:roundId', loadComponent: () => import('./courier/round-detail').then((m) => m.RoundDetail) },
+    ],
+  },
   { path: '**', redirectTo: '' },
 ];
