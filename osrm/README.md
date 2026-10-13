@@ -8,7 +8,7 @@ Self-hosted [OSRM](https://project-osrm.org/) routing engine. Computes real road
 
 | Service | Port | Profile | Used for |
 |---|---|---|---|
-| `osrm` | 5000 | stock car (`car.lua`): respects one-way streets | routes and round cost (what is actually driven) |
+| `osrm-routing` | 5000 | stock car (`car.lua`): respects one-way streets | routes and round cost (what is actually driven) |
 | `osrm-proximity` | 5001 | car with `oneway_handling = false` | grouping orders by street-network closeness, regardless of traffic direction |
 
 One-way streets make driving distance very asymmetric at block scale (e.g. 85 m one way, 1,257 m the other), which would split neighbouring orders for no geographic reason. Proximity still follows the real network (railways, missing crossings), unlike straight-line distance.
@@ -17,7 +17,7 @@ One-way streets make driving distance very asymmetric at block scale (e.g. 85 m 
 
 ```bash
 ./osrm/prepare.sh                            # once: download (~400 MB), clip and preprocess → osrm/data/
-docker compose up -d osrm osrm-proximity     # APIs at :5000 and :5001
+docker compose up -d osrm-routing osrm-proximity  # APIs at :5000 and :5001
 ./osrm/test.sh                               # sample queries (nearest + route both ways)
 ./osrm/test.sh LON,LAT LON,LAT
 OSRM_URL=http://localhost:5001 ./osrm/test.sh   # same queries against the proximity service

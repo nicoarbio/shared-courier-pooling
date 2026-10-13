@@ -1,6 +1,6 @@
 services:
   # Routing engine (respects one-way streets). Requires running osrm/prepare.sh first.
-  osrm:
+  osrm-routing:
     image: ghcr.io/project-osrm/osrm-backend:v5.27.1
     command: osrm-routed --algorithm mld /data/caba.osrm
     volumes:
@@ -52,7 +52,7 @@ services:
     ports:
       - "9966:9966"
     depends_on:
-      - osrm
+      - osrm-routing
 
 volumes:
   postgres-data:
