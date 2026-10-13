@@ -22,7 +22,7 @@ import kotlin.test.assertEquals
 /**
  * Runs the engine on the case study against the real OSRM services and writes a report.
  *
- * Requires `docker compose up -d osrm osrm-proximity`. Run with: `./mvnw test -Pscenario`.
+ * Requires `docker compose up -d osrm-routing osrm-proximity`. Run with: `./mvnw test -Pscenario`.
  * Report: printed to stdout and written to target/scenario-report.md.
  */
 @Tag("scenario")
@@ -74,6 +74,7 @@ class CaseStudyScenarioTest {
 		allocator = CostAllocator(),
 		proximity = proximity,
 		routing = routing,
+		serviceTime = Duration.ofMinutes(2),
 	)
 
 	/**
@@ -88,7 +89,7 @@ class CaseStudyScenarioTest {
 		val cost = rounds.fold(BigDecimal.ZERO) { acc, r -> acc + r.cost }
 		appendLine("## Radius ${radius.m()} m — ${rounds.size} round(s)").appendLine()
 		rounds.forEachIndexed { i, r ->
-			appendLine("### Round ${i + 1}: ${r.distanceMeters.m()} m, ${"%.1f".format(r.durationSeconds / 60)} min, $${r.cost}").appendLine()
+			appendLine("### Round ${i + 1}: ${r.distanceMeters.m()} m, ${"%.1f".format(r.drivingSeconds / 60)} min driving (${"%.1f".format(r.totalSeconds / 60)} min with 2 min per stop), $${r.cost}").appendLine()
 			appendLine("Route: " + r.stops.joinToString(" → ") { s ->
 				when (s.kind) {
 					StopKind.PICKUP -> "pickup ${s.merchant.id}"

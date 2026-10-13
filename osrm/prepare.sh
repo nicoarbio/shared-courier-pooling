@@ -70,4 +70,4 @@ grep -q 'oneway_handling = false' "$DATA_DIR/proximity/car.lua" || { echo "!! co
 build routing car.lua
 build proximity car.lua
 
-echo ">> Done. Start with: docker compose up -d osrm osrm-proximity"
+echo ">> Done. Start with: docker compose up -d osrm-routing osrm-proximity"

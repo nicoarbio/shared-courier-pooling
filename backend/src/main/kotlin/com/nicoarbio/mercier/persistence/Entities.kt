@@ -40,7 +40,9 @@ class MerchantEntity(
 	override fun toString() = "MerchantEntity(id=$id, name=$name)"
 }
 
-enum class OrderStatus { PENDING, PLANNED }
+enum class OrderStatus { PENDING, PLANNED, DISPATCHED }
+
+enum class RoundStatus { PLANNED, DISPATCHED }
 
 @Entity
 @Table(name = "delivery_order")
@@ -71,10 +73,14 @@ class RoundEntity(
 	@Id val id: UUID,
 	@Column(name = "planned_at") val plannedAt: Instant,
 	@Column(name = "distance_m") val distanceMeters: Double,
-	@Column(name = "duration_s") val durationSeconds: Double,
+	@Column(name = "duration_s") val drivingSeconds: Double,
 	val cost: BigDecimal,
 	@Column(name = "price_per_km") val pricePerKm: BigDecimal,
 	@Column(name = "radius_m") val radiusMeters: Double,
+	@Column(name = "service_time_s") val serviceTimeSeconds: Double,
+	@Enumerated(EnumType.STRING) var status: RoundStatus,
+	/** Estimated departure while planned; actual departure once dispatched. City wall-clock time. */
+	@Column(name = "departure_at") var departureAt: LocalDateTime,
 
 	@ElementCollection(fetch = FetchType.EAGER)
 	@CollectionTable(name = "round_stop", joinColumns = [JoinColumn(name = "round_id")])
@@ -89,7 +95,10 @@ class RoundEntity(
 ) {
 	override fun equals(other: Any?) = other is RoundEntity && other.id == id
 	override fun hashCode() = id.hashCode()
-	override fun toString() = "RoundEntity(id=$id, distanceMeters=$distanceMeters, cost=$cost)"
+	override fun toString() = "RoundEntity(id=$id, status=$status, distanceMeters=$distanceMeters, cost=$cost)"
+
+	/** Estimated arrival at a stop: departure plus the stop's offset on the round's timeline. */
+	fun arrivalAt(stop: RoundStopEmbeddable): LocalDateTime = departureAt.plusSeconds(stop.arrivalOffsetSeconds.toLong())
 }
 
 /** One stop of a round's route; its position in the list is stored in `seq`. */
@@ -100,4 +109,7 @@ class RoundStopEmbeddable(
 	@Column(name = "order_id") val orderId: UUID?,
 	val lon: Double,
 	val lat: Double,
+	@Column(name = "leg_distance_m") val legDistanceMeters: Double,
+	@Column(name = "leg_duration_s") val legDurationSeconds: Double,
+	@Column(name = "arrival_offset_s") val arrivalOffsetSeconds: Double,
 )
