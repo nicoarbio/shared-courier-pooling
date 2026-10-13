@@ -2,11 +2,13 @@ package com.nicoarbio.mercier.api
 
 import com.nicoarbio.mercier.domain.GeoPoint
 import com.nicoarbio.mercier.domain.TimeWindow
+import com.nicoarbio.mercier.geocoding.GeocodingService
 import com.nicoarbio.mercier.persistence.RoundStatus
 import com.nicoarbio.mercier.planning.PlanningService
 import io.swagger.v3.oas.annotations.Operation
 import io.swagger.v3.oas.annotations.tags.Tag
 import jakarta.validation.Valid
+import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseEntity
 import org.springframework.web.bind.annotation.GetMapping
 import org.springframework.web.bind.annotation.PathVariable
@@ -15,6 +17,7 @@ import org.springframework.web.bind.annotation.RequestBody
 import org.springframework.web.bind.annotation.RequestMapping
 import org.springframework.web.bind.annotation.RequestParam
 import org.springframework.web.bind.annotation.RestController
+import org.springframework.web.server.ResponseStatusException
 import org.springframework.web.servlet.support.ServletUriComponentsBuilder
 import java.util.UUID
 
@@ -53,6 +56,27 @@ class OrderController(private val planning: PlanningService, private val views: 
 	@GetMapping("/{id}")
 	@Operation(summary = "An order with its round, the merchant's share and the estimated delivery time")
 	fun get(@PathVariable id: UUID) = views.order(id)
+}
+
+@RestController
+@RequestMapping("/api/geocode")
+@Tag(name = "Geocoding")
+class GeocodingController(private val geocoding: GeocodingService) {
+
+	@GetMapping
+	@Operation(summary = "Search an address within the merchant's delivery area (candidates to confirm on a map)")
+	fun search(@RequestParam q: String, @RequestParam merchantId: UUID): List<GeocodeCandidateResponse> {
+		if (q.trim().length < MIN_QUERY_LENGTH) {
+			throw ResponseStatusException(HttpStatus.BAD_REQUEST, "Query must have at least $MIN_QUERY_LENGTH characters")
+		}
+		return geocoding.search(q, merchantId).map {
+			GeocodeCandidateResponse(it.label, it.street, it.houseNumber, it.neighbourhood, Coordinates(it.location.lon, it.location.lat))
+		}
+	}
+
+	private companion object {
+		const val MIN_QUERY_LENGTH = 3
+	}
 }
 
 @RestController

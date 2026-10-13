@@ -31,6 +31,7 @@ Swagger UI at `/swagger-ui.html` (OpenAPI at `/v3/api-docs`). Errors are RFC 945
 |---|---|---|---|
 | Merchant | `GET` | `/api/merchants` | List merchants (no login: the UI picks one) |
 | Merchant | `POST` | `/api/orders` | Submit an order (coordinates + address text); re-plans every order that has not left yet |
+| Merchant | `GET` | `/api/geocode?q=&merchantId=` | Address candidates within the merchant's delivery area (via [Nominatim](../nominatim)), to confirm on a map |
 | Merchant | `GET` | `/api/merchants/{id}/orders` | The merchant's orders: round, share of the round's cost, estimated delivery |
 | Courier | `GET` | `/api/rounds?status=PLANNED` | Rounds ready to leave |
 | Courier | `GET` | `/api/rounds/{id}` | Ordered stops with estimated times, cost split and a Google Maps link |
@@ -43,7 +44,7 @@ Estimated times: departure (earliest delivery window, or now) + driving per OSRM
 ```bash
 ./mvnw test                  # unit + persistence tests (needs Docker: PostgreSQL via Testcontainers; no OSRM)
 
-# Run the service (needs: docker compose up -d postgres osrm-routing osrm-proximity)
+# Run the service (needs: docker compose up -d postgres osrm-routing osrm-proximity nominatim)
 ./mvnw spring-boot:run -Dspring-boot.run.profiles=local   # "local" also loads the case study shops
 
 # Case study run against real OSRM (needs: docker compose up -d osrm-routing osrm-proximity)

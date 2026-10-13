@@ -16,6 +16,16 @@ data class PoolingProperties(
 	val stopServiceTime: Duration,
 )
 
+@ConfigurationProperties("mercier.geocoding")
+data class GeocodingProperties(
+	/** Self-hosted Nominatim instance. */
+	val nominatimUrl: String,
+	/** Half side of the square around the merchant where addresses are searched. */
+	val searchRadiusMeters: Double,
+	/** Max candidates returned to the UI. */
+	val maxResults: Int,
+)
+
 @ConfigurationProperties("mercier.osrm")
 data class OsrmProperties(
 	/** OSRM instance that respects one-way streets: routes and costs. */
