@@ -24,7 +24,19 @@ describe('sessionInterceptor', () => {
     expect(second.request.headers.get('X-Session-Id')).toBe(id);
   });
 
-  it('does not add the header to non-API calls', () => {
+  it('works on plain HTTP, where crypto.randomUUID does not exist (insecure context)', () => {
+    const original = crypto.randomUUID;
+    Object.defineProperty(crypto, 'randomUUID', { value: undefined, configurable: true });
+    try {
+      TestBed.inject(HttpClient).get('/api/merchants').subscribe();
+      const request = TestBed.inject(HttpTestingController).expectOne('/api/merchants');
+      expect(request.request.headers.get('X-Session-Id')).toMatch(/^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/);
+    } finally {
+      Object.defineProperty(crypto, 'randomUUID', { value: original, configurable: true });
+    }
+  });
+
+    it('does not add the header to non-API calls', () => {
     TestBed.inject(HttpClient).get('/assets/x.json').subscribe();
     const request = TestBed.inject(HttpTestingController).expectOne('/assets/x.json');
     expect(request.request.headers.has('X-Session-Id')).toBe(false);

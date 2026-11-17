@@ -58,11 +58,14 @@ class DemoResetTest {
 			)
 			jdbc.update("insert into round_stop (round_id, seq, kind, merchant_id, lon, lat) values (?, 0, 'PICKUP', ?, 0, 0)", round, shop.id)
 			jdbc.update("insert into round_share (round_id, merchant_id, amount) values (?, ?, 100)", round, shop.id)
+			val order = UUID.randomUUID()
 			jdbc.update(
 				"insert into delivery_order (id, merchant_id, dest_lon, dest_lat, window_start, window_end, status, round_id, created_at) " +
 					"values (?, ?, 0, 0.001, now(), now(), 'PLANNED', ?, now())",
-				UUID.randomUUID(), shop.id, round,
+				order, shop.id, round,
 			)
+			// A delivery stop references its order, while the order references the round: a real round's shape.
+			jdbc.update("insert into round_stop (round_id, seq, kind, merchant_id, order_id, lon, lat) values (?, 1, 'DELIVERY', ?, ?, 0, 0.001)", round, shop.id, order)
 
 			mvc.get("/api/demo").andExpect { status { isOk() } }
 			mvc.post("/api/demo/reset").andExpect {

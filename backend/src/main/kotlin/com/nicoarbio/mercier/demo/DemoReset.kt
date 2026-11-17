@@ -6,6 +6,7 @@ import io.swagger.v3.oas.annotations.Operation
 import io.swagger.v3.oas.annotations.tags.Tag
 import org.slf4j.LoggerFactory
 import org.springframework.boot.autoconfigure.condition.ConditionalOnBooleanProperty
+import org.springframework.jdbc.core.JdbcTemplate
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
 import org.springframework.web.bind.annotation.GetMapping
@@ -23,14 +24,18 @@ import org.springframework.web.bind.annotation.RestController
 class DemoResetService(
 	private val orders: OrderRepository,
 	private val rounds: RoundRepository,
+	private val jdbc: JdbcTemplate,
 ) {
 
-	/** Deletes every order and round; merchants stay. Rounds' stops and shares go with them (ON DELETE CASCADE). */
+	/**
+	 * Deletes every order and round, with their stops and cost shares; merchants stay.
+	 * Orders reference rounds and delivery stops reference orders, so no table-by-table order works: a single
+	 * TRUNCATE of the four tables lets PostgreSQL drop them together (and it is transactional).
+	 */
 	@Transactional
 	fun reset(): DemoResetResult {
 		val result = DemoResetResult(deletedOrders = orders.count(), deletedRounds = rounds.count())
-		orders.deleteAllInBatch()
-		rounds.deleteAllInBatch()
+		jdbc.execute("truncate table round_share, round_stop, delivery_order, round")
 		log.info("Demo reset: deleted {} orders and {} rounds", result.deletedOrders, result.deletedRounds)
 		return result
 	}
