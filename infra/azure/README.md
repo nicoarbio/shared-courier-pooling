@@ -16,11 +16,14 @@ Requires the Azure CLI, logged in (`az login`; the tenant may ask for MFA when t
 
 ```bash
 ./infra/azure/up.sh     # ~3 min to create + ~15-20 min for the VM to set itself up; prints the URL
+./infra/azure/update.sh # deploys the latest code to the running VM in seconds (keeps data; ~15 s down)
 ./infra/azure/down.sh   # deletes everything (asks to type the resource group name)
 BUDGET_EMAIL=you@example.com ./infra/azure/budget.sh   # once: monthly cost alert (USD 30 by default)
 ```
 
 There is no automatic shutdown: Azure's scheduled shutdown is not available in Chile Central, and shutting down from inside the VM would not stop compute billing (the VM stays allocated). The VM runs until `down.sh`; the budget alert covers forgetting it.
+
+`update.sh` pulls the deployed branch on the VM and runs `docker compose --profile app up -d --build`: only the images built from the repo (backend, frontend) are rebuilt, and only the containers that changed are recreated; PostgreSQL and Nominatim data stay in their volumes. It also points the SSH firewall rule to your current IP, in case it changed.
 
 Follow the setup and check the services:
 
