@@ -7,7 +7,7 @@ describe('DemoReset', () => {
   const setup = (enabled: boolean) => {
     const api = {
       demoStatus: vi.fn(() => (enabled ? of({ resetEnabled: true }) : throwError(() => new Error('404')))),
-      resetDemo: vi.fn(() => of({ deletedOrders: 5, deletedRounds: 1 })),
+      resetDemo: vi.fn(() => of({ loadedOrders: 5, plannedRounds: 1 })),
     };
     TestBed.configureTestingModule({ providers: [DemoReset, { provide: Api, useValue: api }] });
     return { demo: TestBed.inject(DemoReset), api };

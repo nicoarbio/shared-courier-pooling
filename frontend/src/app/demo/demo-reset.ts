@@ -13,8 +13,8 @@ type ResetState =
   | { step: 'failed'; error: ApiError };
 
 /**
- * "Reset demo": only offered when the backend has it enabled (GET /api/demo answers 200), and only after an
- * explicit confirmation, since it deletes every order and round.
+ * "Reset demo": back to the case study, already planned. Only offered when the backend has it enabled
+ * (GET /api/demo answers 200), and only after an explicit confirmation, since it deletes every order and round.
  */
 @Service({ autoProvided: false })
 export class DemoReset {
@@ -38,7 +38,7 @@ export class DemoReset {
   confirm(): void {
     this.state.set({ step: 'resetting' });
     this.api.resetDemo().subscribe({
-      next: (r) => this.state.set({ step: 'done', orders: r.deletedOrders, rounds: r.deletedRounds }),
+      next: (r) => this.state.set({ step: 'done', orders: r.loadedOrders, rounds: r.plannedRounds }),
       error: (e: unknown) => this.state.set({ step: 'failed', error: toApiError(e) }),
     });
   }

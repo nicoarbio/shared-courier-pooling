@@ -51,7 +51,8 @@ export class Api {
     return this.http.get<{ resetEnabled: boolean }>('/api/demo');
   }
 
-  resetDemo(): Observable<{ deletedOrders: number; deletedRounds: number }> {
-    return this.http.post<{ deletedOrders: number; deletedRounds: number }>('/api/demo/reset', null);
+  /** Back to the demo state: the case study's orders, already planned. */
+  resetDemo(): Observable<{ loadedOrders: number; plannedRounds: number }> {
+    return this.http.post<{ loadedOrders: number; plannedRounds: number }>('/api/demo/reset', null);
   }
 }

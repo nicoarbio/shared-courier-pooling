@@ -34,3 +34,6 @@ osrm/data/
 
 # Host-specific Docker Compose settings (e.g. FRONTEND_PORT on the Azure VM)
 .env
+
+# Playwright MCP snapshots and screenshots
+.playwright-mcp/

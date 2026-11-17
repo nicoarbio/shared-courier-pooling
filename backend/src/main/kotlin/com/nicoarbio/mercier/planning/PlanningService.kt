@@ -40,25 +40,31 @@ class PlanningService(
 ) {
 
 	@Transactional
-	fun submitOrder(merchantId: UUID, destination: GeoPoint, address: String?, window: TimeWindow): OrderEntity {
-		val merchant = merchants.findById(merchantId).orElseThrow { NoSuchElementException("Merchant $merchantId not found") }
-		val order = orders.save(
-			OrderEntity(
-				id = UUID.randomUUID(),
-				merchant = merchant,
-				destLon = destination.lon,
-				destLat = destination.lat,
-				address = address,
-				windowStart = window.start,
-				windowEnd = window.end,
-				status = OrderStatus.PENDING,
-				round = null,
-				createdAt = Instant.now(clock),
-			),
-		)
-		log.info("Order {} submitted, window {} - {}", order.id, window.start, window.end)
+	fun submitOrder(merchantId: UUID, destination: GeoPoint, address: String?, window: TimeWindow): OrderEntity =
+		submitOrders(listOf(NewOrder(merchantId, destination, address, window))).single()
+
+	/** Saves several orders and re-plans once (e.g. loading the demo's case study). */
+	@Transactional
+	fun submitOrders(newOrders: List<NewOrder>): List<OrderEntity> {
+		val saved = newOrders.map { new ->
+			val merchant = merchants.findById(new.merchantId).orElseThrow { NoSuchElementException("Merchant ${new.merchantId} not found") }
+			orders.save(
+				OrderEntity(
+					id = UUID.randomUUID(),
+					merchant = merchant,
+					destLon = new.destination.lon,
+					destLat = new.destination.lat,
+					address = new.address,
+					windowStart = new.window.start,
+					windowEnd = new.window.end,
+					status = OrderStatus.PENDING,
+					round = null,
+					createdAt = Instant.now(clock),
+				),
+			).also { log.info("Order {} submitted, window {} - {}", it.id, new.window.start, new.window.end) }
+		}
 		replan()
-		return order
+		return saved
 	}
 
 	@Transactional
@@ -137,3 +143,5 @@ class PlanningService(
 }
 
 private val log = LoggerFactory.getLogger(PlanningService::class.java)
+
+data class NewOrder(val merchantId: UUID, val destination: GeoPoint, val address: String?, val window: TimeWindow)
