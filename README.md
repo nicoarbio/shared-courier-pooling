@@ -14,6 +14,8 @@ Final degree project (Universidad de Palermo). Not an open marketplace: a small,
 
 **Case study** (4 shops on one block of Yerbal, Caballito, Buenos Aires; 5 orders between 19:00 and 19:30): one round of 3,734 m instead of 5 dedicated trips totalling 9,871 m — **62% cheaper** — with every delivery inside the window.
 
+**Live demo**: http://shared-courier-pooling.chilecentral.cloudapp.azure.com (see [Deployment](#deployment)).
+
 ```mermaid
 flowchart LR
     UI["Frontend (Angular)"] -- REST --> B["backend (Mercier)<br/>Kotlin · Spring Boot"]
@@ -32,6 +34,7 @@ flowchart LR
 | [`osrm/`](osrm) | Self-hosted OSRM over an OpenStreetMap extract of Buenos Aires (two profiles) | [README](osrm/README.md) |
 | [`nominatim/`](nominatim) | Self-hosted geocoder over the same extract | [README](nominatim/README.md) |
 | [`frontend/`](frontend) | Mobile-first web app for shops and couriers | [README](frontend/README.md) |
+| [`infra/azure/`](infra/azure) | Scripts to create, update and remove the demo environment on Azure | [README](infra/azure/README.md) |
 
 ## Tech stack
 
@@ -41,7 +44,7 @@ flowchart LR
 - **Geocoding**: [Nominatim](https://nominatim.org/), self-hosted.
 - **Map data**: [OpenStreetMap](https://www.openstreetmap.org/) via [Geofabrik](https://download.geofabrik.de/).
 - **Tests**: JUnit 5, MockMvc, Testcontainers.
-- **Infra**: Docker Compose.
+- **Infra**: Docker Compose; demo on an Azure VM created by scripts (Azure CLI + cloud-init).
 - **Frontend**: Angular 22, Angular Material, Leaflet (OpenStreetMap tiles), Vitest.
 
 ## Getting started
@@ -94,7 +97,17 @@ Optional route viewer for visual checks: `docker compose --profile tools up -d o
 
 ## Deployment
 
-TODO: hosted environment (single VM running the same Docker Compose).
+Demo on Azure: **http://shared-courier-pooling.chilecentral.cloudapp.azure.com** (available while the demo environment is up). It opens in the case study already planned; *Reiniciar demo* on the home screen brings it back to that state.
+
+A single Ubuntu VM runs the same Docker Compose as locally (`--profile app`), created and removed by scripts so it only costs while it exists:
+
+```bash
+./infra/azure/up.sh       # create the VM; it installs Docker and starts the system on its own (~20 min)
+./infra/azure/update.sh   # deploy the latest code to the running VM (~15 s down, data kept)
+./infra/azure/down.sh     # delete everything
+```
+
+Details, costs and firewall rules: [`infra/azure`](infra/azure/README.md).
 
 ## License
 
