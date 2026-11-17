@@ -31,3 +31,6 @@ osrm/data/
 
 # IDE (JetBrains)
 .idea/
+
+# Host-specific Docker Compose settings (e.g. FRONTEND_PORT on the Azure VM)
+.env

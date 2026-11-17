@@ -53,8 +53,6 @@ az network nsg rule create --resource-group "$RESOURCE_GROUP" --nsg-name "$NSG" 
   --priority 110 --direction Inbound --access Allow --protocol Tcp --destination-port-ranges 22 \
   --source-address-prefixes "$MY_IP" -o none
 
-az vm auto-shutdown --resource-group "$RESOURCE_GROUP" --name "$VM_NAME" --time "$AUTO_SHUTDOWN_UTC" -o none
-
 IP="$(az vm show --show-details --resource-group "$RESOURCE_GROUP" --name "$VM_NAME" --query publicIps -o tsv)"
 URL="http://$DNS_LABEL.$LOCATION.cloudapp.azure.com"
 cat <<EOF
@@ -62,5 +60,5 @@ cat <<EOF
 >> VM created. It is now installing Docker and starting the system (~15-20 min).
    Follow it:  ssh $ADMIN_USER@$IP 'cloud-init status --wait; cd /opt/shared-courier-pooling && docker compose ps'
    Then open:  $URL   (public link; also http://$IP)
-   Remove it:  ./down.sh   (auto-shutdown every day at $AUTO_SHUTDOWN_UTC UTC as a safety net)
+   Remove it:  ./down.sh   (it keeps running, and costing, until then; see budget.sh for a cost alert)
 EOF

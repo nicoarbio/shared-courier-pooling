@@ -20,8 +20,7 @@ SSH_PUBLIC_KEY="${SSH_PUBLIC_KEY:-$HOME/.ssh/id_ed25519.pub}"
 REPO_URL="${REPO_URL:-https://github.com/nicoarbio/shared-courier-pooling.git}"
 REPO_BRANCH="${REPO_BRANCH:-main}"
 
-# Safety net: the VM shuts itself down every day at this UTC time (23:00 in Buenos Aires),
-# in case down.sh is forgotten. A stopped VM still costs its disk and public IP (~USD 7/month).
-AUTO_SHUTDOWN_UTC="${AUTO_SHUTDOWN_UTC:-0200}"
+# Monthly cost alert (budget.sh): emails at 80% and 100% of this amount (USD).
+BUDGET_AMOUNT="${BUDGET_AMOUNT:-30}"
 
 TAGS="project=shared-courier-pooling"

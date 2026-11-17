@@ -66,6 +66,8 @@ services:
       MERCIER_GEOCODING_NOMINATIM_URL: http://nominatim:8080
       # Also load the case study shops (db/seed).
       SPRING_FLYWAY_LOCATIONS: classpath:db/migration,classpath:db/seed
+      # Demo: enables the "reset demo" button (deletes all orders and rounds, keeps the shops).
+      MERCIER_DEMO_RESET_ENABLED: "true"
     depends_on:
       postgres:
         condition: service_healthy

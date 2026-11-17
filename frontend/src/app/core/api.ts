@@ -45,4 +45,13 @@ export class Api {
   dispatch(id: string): Observable<Round> {
     return this.http.post<Round>(`/api/rounds/${id}/dispatch`, null);
   }
+
+  /** 200 when the backend has demo features enabled; 404 otherwise. */
+  demoStatus(): Observable<{ resetEnabled: boolean }> {
+    return this.http.get<{ resetEnabled: boolean }>('/api/demo');
+  }
+
+  resetDemo(): Observable<{ deletedOrders: number; deletedRounds: number }> {
+    return this.http.post<{ deletedOrders: number; deletedRounds: number }>('/api/demo/reset', null);
+  }
 }
