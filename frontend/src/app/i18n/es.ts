@@ -81,11 +81,11 @@ export const es = {
   },
   demo: {
     reset: 'Reiniciar demo',
-    confirm: 'Se borran todos los pedidos y rondas; los comercios quedan. ¿Continuar?',
+    confirm: 'Vuelve al Caso de Estudio: se borran todos los pedidos y se cargan los 5 del ejemplo, ya planificados. ¿Continuar?',
     confirmYes: 'Sí, reiniciar',
     confirmNo: 'Cancelar',
     resetting: 'Reiniciando…',
-    done: 'Demo reiniciada: se borraron {orders} pedidos y {rounds} rondas.',
+    done: 'Demo lista: {orders} pedidos del Caso de Estudio en {rounds} ronda(s), a punto de salir.',
   },
   common: {
     refresh: 'Actualizar',
