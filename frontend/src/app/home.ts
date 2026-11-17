@@ -1,12 +1,13 @@
 import { Component } from '@angular/core';
 import { MatButtonModule } from '@angular/material/button';
 import { RouterLink } from '@angular/router';
+import { DemoResetPanel } from './demo/demo-reset';
 import { TranslatePipe } from './i18n/translate';
 
 /** Entry point: there is no login, the user just says who they are. */
 @Component({
   selector: 'app-home',
-  imports: [RouterLink, MatButtonModule, TranslatePipe],
+  imports: [RouterLink, MatButtonModule, TranslatePipe, DemoResetPanel],
   template: `
     <h1>{{ 'home.question' | t }}</h1>
     <section class="choice">
@@ -17,6 +18,7 @@ import { TranslatePipe } from './i18n/translate';
       <a mat-stroked-button routerLink="/repartidor">{{ 'home.courier' | t }}</a>
       <p>{{ 'home.courierHint' | t }}</p>
     </section>
+    <app-demo-reset />
   `,
   styles: `
     .choice {

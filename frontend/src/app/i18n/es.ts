@@ -79,6 +79,14 @@ export const es = {
       dispatched: 'Ronda en camino',
     },
   },
+  demo: {
+    reset: 'Reiniciar demo',
+    confirm: 'Se borran todos los pedidos y rondas; los comercios quedan. ¿Continuar?',
+    confirmYes: 'Sí, reiniciar',
+    confirmNo: 'Cancelar',
+    resetting: 'Reiniciando…',
+    done: 'Demo reiniciada: se borraron {orders} pedidos y {rounds} rondas.',
+  },
   common: {
     refresh: 'Actualizar',
     loading: 'Cargando…',
