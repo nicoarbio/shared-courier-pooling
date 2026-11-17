@@ -21,5 +21,7 @@ runcmd:
   - chown -R __ADMIN_USER__:__ADMIN_USER__ /opt/shared-courier-pooling
   # Map data for OSRM and Nominatim (downloads ~400 MB from Geofabrik).
   - cd /opt/shared-courier-pooling && sudo -u __ADMIN_USER__ ./osrm/prepare.sh
-  # Whole system; the app is served on port 80.
-  - cd /opt/shared-courier-pooling && FRONTEND_PORT=80 docker compose --profile app up -d --build
+  # Host settings for every later `docker compose` run too (compose reads .env on its own): the app on port 80.
+  - echo "FRONTEND_PORT=80" > /opt/shared-courier-pooling/.env
+  # Whole system.
+  - cd /opt/shared-courier-pooling && docker compose --profile app up -d --build

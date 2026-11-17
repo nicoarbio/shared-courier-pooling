@@ -8,7 +8,7 @@ Demo environment on Azure: a single Ubuntu VM that runs the whole system with th
 | VM | `Standard_B2als_v2`: 2 vCPU, 4 GB RAM (the system uses ~1.5 GB), Ubuntu 24.04, 32 GB Standard SSD |
 | Network | Public IP with a stable name, `http://shared-courier-pooling.chilecentral.cloudapp.azure.com`; inbound HTTP 80 for everyone, SSH 22 only from the IP that ran `up.sh` |
 | Setup | [`cloud-init.yaml`](cloud-init.yaml), on first boot: Docker, clone the repo, `osrm/prepare.sh`, `docker compose --profile app up -d --build` (app on port 80) |
-| Safety net | The VM shuts itself down daily at 02:00 UTC (23:00 Buenos Aires) |
+| Cost alert | Monthly budget with email alerts at 80% and 100% (`budget.sh`, once per subscription) |
 
 ## Usage
 
@@ -17,7 +17,10 @@ Requires the Azure CLI, logged in (`az login`; the tenant may ask for MFA when t
 ```bash
 ./infra/azure/up.sh     # ~3 min to create + ~15-20 min for the VM to set itself up; prints the URL
 ./infra/azure/down.sh   # deletes everything (asks to type the resource group name)
+BUDGET_EMAIL=you@example.com ./infra/azure/budget.sh   # once: monthly cost alert (USD 30 by default)
 ```
+
+There is no automatic shutdown: Azure's scheduled shutdown is not available in Chile Central, and shutting down from inside the VM would not stop compute billing (the VM stays allocated). The VM runs until `down.sh`; the budget alert covers forgetting it.
 
 Follow the setup and check the services:
 
@@ -38,5 +41,5 @@ Every `up.sh` starts from scratch: fresh database with the case study shops and 
 New subscriptions need the resource providers registered (free; done once):
 
 ```bash
-for p in Microsoft.Compute Microsoft.Network Microsoft.Storage Microsoft.DevTestLab; do az provider register -n $p; done
+for p in Microsoft.Compute Microsoft.Network Microsoft.Storage; do az provider register -n $p; done
 ```
